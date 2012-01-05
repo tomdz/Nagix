@@ -78,6 +78,11 @@ module Nagix
       result
     end
 
+    def execute(cmd_name, params)
+      cmd = NagiosXcmd.new(cmd_name, params)
+      xcmd(cmd)
+    end
+
     def xcmd(napixcmd)
       @log.debug "COMMAND:\n#{napixcmd}\n"
       @lqlsocket = MKLivestatus.connect(@lqlpath) if @lqlsocket == nil

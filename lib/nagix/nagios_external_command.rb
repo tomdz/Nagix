@@ -26,7 +26,7 @@ module Nagix
     class Error < StandardError; end
     class MissingParameters < Error; end
 
-    def initialize(napixcmd,params)
+    def initialize(napixcmd, params)
       @napixcmd = napixcmd.to_sym
       @cmd = nil
       if NAGIOSXCMDS.has_key?(@napixcmd)

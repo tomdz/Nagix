@@ -7,7 +7,7 @@ $LOAD_PATH.unshift(lib_dir) if File.directory?(lib_dir) && !$LOAD_PATH.include?(
 
 require 'rubygems'
 require 'nagix'
-require 'nagix/http'
-require "rack"
+require 'rack'
 
-Rack::Server.start :app => Nagix::App, :Port => 8080
+config_file = File.join(lib_dir, 'nagix', 'config.ru')
+Rack::Server.start :config => config_file, :Port => 8080

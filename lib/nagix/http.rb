@@ -8,6 +8,7 @@ require 'nagix/mk_livestatus'
 require 'nagix/nagios_object'
 require 'nagix/nagios_external_command'
 require 'nagix/version'
+require 'nagix/setup'
 
 module Nagix
 
@@ -19,47 +20,14 @@ module Nagix
     set :root, File.expand_path("../..", File.dirname(__FILE__))
 
     configure do
-      config_file = nil
-      if ARGV.any?
-        require 'optparse'
-        OptionParser.new { |op|
-          op.on('-c path') { |val| config_file = val }
-        }.parse!(ARGV.dup)
-      end
-
-      set :mklivestatus_socket, nil
-      set :mklivestatus_log_file, nil
-      set :mklivestatus_log_level, nil
-
-      if config_file
-        config = YAML.load_file(config_file)
-      else
-        if File.exist?(".nagixrc")
-          config = YAML.load_file(".nagixrc")
-        elsif File.exists?("#{ENV['HOME']}/.nagixrc")
-          config = YAML.load_file("#{ENV['HOME']}/.nagixrc")
-        elsif File.exists?("/etc/nagixrc")
-          config = YAML.load_file("etc/nagixrc")
-        end
-      end
-
+      config = Setup::setup_from_args
       if config
-        @config = config.to_hash.each do |k,v|
+        config.to_hash.each do |k,v|
           set k.to_sym, v
         end
-      else
-        @config = {}
       end
 
       set :appname, "nagix"
-
-#      not_found do
-#        haml('404')
-#      end
-
-#      error do
-#        haml('500')
-#      end
     end
 
     configure :production do
@@ -99,7 +67,7 @@ module Nagix
         redirect "/hosts/#{params[:host_name]}/#{params[:service_description]}/attributes"
       end
 
-      @hosts = @lql.query("hosts",@filter,@columns)
+      @hosts = @lql.query("hosts", @filter, @columns)
       respond_to do |wants|
         wants.html { @hosts == nil ? not_found : haml(:hosts) }
         wants.json { @hosts.to_json }
@@ -142,11 +110,10 @@ module Nagix
         halt 400, "JSON parse error\n"
       end
       begin
-        cmd = NagiosXcmd.new(napixcmd,napixcmd_params)
+        @lql.execute(napixcmd, napixcmd_params)
       rescue NagiosXcmd::Error => e
         halt 400, e.message
       end
-      @lql.xcmd(cmd)
     end
 
     put %r{/hosts/([a-zA-Z0-9\.]+)/command/([A-Z_]+)} do |host_name, napixcmd|
@@ -157,11 +124,10 @@ module Nagix
         halt 400, "JSON parse error\n"
       end
       begin
-        cmd = NagiosXcmd.new(napixcmd,napixcmd_params)
+        @lql.execute(napixcmd, napixcmd_params)
       rescue NagiosXcmd::Error => e
         halt 400, e.message
       end
-      @lql.xcmd(cmd)
     end
 
     post '/hosts' do
@@ -181,8 +147,6 @@ module Nagix
         wants.json { @items.to_json }
       end
     end
-
-    run! if $0 == __FILE__
 
   end
 end
