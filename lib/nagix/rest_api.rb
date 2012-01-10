@@ -98,7 +98,7 @@ module Nagix
 
     get "/hosts/:name" do
       @host_name = params[:host_name]
-      @hosts = @lql.query("SELECT * FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
+      @hosts = query("SELECT * FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
       respond_to do |wants|
         wants.html { @hosts == nil or @hosts.length == 0 ? halt(404, "Host #{@host_name} not found") : haml(:host) }
         wants.json { @hosts.to_json }
