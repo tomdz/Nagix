@@ -105,7 +105,7 @@ module Nagix
       end
     end
 
-    put "/hosts/:name/ack" do
+    put "/hosts/:name/acknowledgement" do
       execute :ACKNOWLEDGE_HOST_PROBLEM,
               :host_name => params[:name],
               :sticky => bool_to_num(request.params[:sticky], true),
@@ -115,7 +115,7 @@ module Nagix
               :comment => request.params[:persistent] || ''
     end
 
-    delete "/hosts/:name/ack" do
+    delete "/hosts/:name/acknowledgement" do
       execute :REMOVE_HOST_ACKNOWLEDGEMENT,
               :host_name => params[:name]
     end
@@ -151,7 +151,7 @@ module Nagix
       end
     end
 
-    put "/hosts/:name/services/:service/ack" do
+    put "/hosts/:name/services/:service/acknowledgement" do
       execute :ACKNOWLEDGE_SVC_PROBLEM,
               :host_name => params[:name],
               :service_description => params[:service],
@@ -162,7 +162,7 @@ module Nagix
               :comment => request.params[:persistent] || ''
     end
 
-    delete "/hosts/:name/services/:service/ack" do
+    delete "/hosts/:name/services/:service/acknowledgement" do
       execute :REMOVE_SVC_ACKNOWLEDGEMENT,
               :host_name => params[:name],
               :service_description => params[:service]
