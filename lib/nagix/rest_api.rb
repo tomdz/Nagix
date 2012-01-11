@@ -96,7 +96,7 @@ module Nagix
               :servicegroup => params[:name]
     end
 
-    get "/hosts/:name" do
+    get "/hosts/:name/status" do
       @host_name = params[:host_name]
       @hosts = query("SELECT * FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
       respond_to do |wants|
@@ -140,7 +140,7 @@ module Nagix
               :host_name => params[:name]
     end
 
-    get "/hosts/:name/services/:service" do
+    get "/hosts/:name/services/:service/status" do
       @host_name = params[:name]
       @service_description = params[:service]
       host = query("SELECT name FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
