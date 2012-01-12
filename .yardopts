@@ -1,0 +1,10 @@
+--markup markdown
+--no-private
+--protected
+--hide-void-return
+--output-dir doc/build/api
+--plugin sinatra
+--verbose
+lib/**/*.rb
+lib/**/config.ru
+LICENSE.txt
