@@ -22,7 +22,13 @@ module Nagix
           config = YAML.load_file("etc/nagixrc")
         end
       end
-      config
+      config = config.to_hash if config
+      # defaults
+      return {
+        'mklivestatus_socket' => nil,
+        'mklivestatus_log_file' => nil,
+        'mklivestatus_log_level' => nil
+      }.merge(config || {})
     end
   end
 end

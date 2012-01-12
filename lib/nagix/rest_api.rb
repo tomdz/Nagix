@@ -1,8 +1,10 @@
+require 'rubygems'
 require 'sinatra'
 require 'rack/conneg'
 require 'json'
 require 'nagix/setup'
 require 'nagix/mk_livestatus'
+require 'haml'
 
 module Nagix
   # The Nagix REST API, which is available under `/1.0/rest`.
@@ -14,14 +16,14 @@ module Nagix
     end
 
     configure do
-      config = Setup::setup_from_args
-      if config
-        config.to_hash.each do |k,v|
-          set k.to_sym, v
-        end
+      Setup::setup_from_args.each do |k,v|
+        set k.to_sym, v
       end
+      Tilt.register Tilt::HamlTemplate, 'html.haml'
 
+      set :root, File.expand_path("../..", File.dirname(__FILE__))
       set :appname, "nagix-rest-api"
+      enable :logging
     end
 
     before do
@@ -45,6 +47,7 @@ module Nagix
         lql.execute(cmd_name, params)
         status 200
       rescue Exception => e
+        logger.error "#{$!}\n\t" + e.backtrace.join("\n\t")
         halt 400, e.message
       end
     end
@@ -61,6 +64,7 @@ module Nagix
                                       :log_level => settings.mklivestatus_log_level)
         lql.query(nql_query)
       rescue Exception => e
+        logger.error "#{$!}\n\t" + e.backtrace.join("\n\t")
         halt 400, e.message
       end
     end
@@ -76,6 +80,16 @@ module Nagix
         1
       else
         0
+      end
+    end
+
+    # Returns all services configured in Nagios. Supports either html or json via the `Accept`
+    # header (`text/html` vs. `application/json`) or file ending (`.../status.html` or `.../status.json`).
+    get "/services" do
+      @services = query("SELECT * FROM services") || {}
+      respond_to do |wants|
+        wants.html { haml :services }
+        wants.json { @services.to_json }
       end
     end
 
@@ -137,8 +151,9 @@ module Nagix
     get "/hosts/:name/status" do
       @host_name = params[:host_name]
       @hosts = query("SELECT * FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
+      halt(404, "Host #{@host_name} not found") if @hosts == nil or @hosts.empty?
       respond_to do |wants|
-        wants.html { @hosts == nil or @hosts.length == 0 ? halt(404, "Host #{@host_name} not found") : haml(:host) }
+        wants.html { haml :host }
         wants.json { @hosts.to_json }
       end
     end
@@ -202,7 +217,14 @@ module Nagix
     # via the `Accept` header (`text/html` vs. `application/json`) or file ending (`.../status.html` or
     # `.../status.json`).
     get "/hosts/:name/services" do
-      # TODO
+      @host_name = params[:name]
+      host = query("SELECT name FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
+      halt(404, "Host #{@host_name} not found") if @hosts == nil or @hosts.empty?
+      @services = query("SELECT * FROM services WHERE host_name = '#{host[0]['name']}'") || {}
+      respond_to do |wants|
+        wants.html { haml :services }
+        wants.json { @services.to_json }
+      end
     end
 
     # Enables checks for all services on the given host.
@@ -240,9 +262,11 @@ module Nagix
       @host_name = params[:name]
       @service_description = params[:service]
       host = query("SELECT name FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
+      halt(404, "Host #{@host_name} not found") if host == nil or host.empty?
       @hosts = query("SELECT * FROM services WHERE host_name = '#{host[0]['name']}' AND description = '#{@service_description}'")
+      halt(404, "Host #{@host_name} not found") if @hosts == nil or @hosts.empty?
       respond_to do |wants|
-        wants.html { @hosts == nil ? halt(404, "Host #{@host_name} not found") : haml(:host) }
+        wants.html { haml :host }
         wants.json { @hosts.to_json }
       end
     end

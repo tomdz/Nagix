@@ -12,6 +12,7 @@ module Nagix
     class LQLError < Error; end
 
     def initialize(params)
+      raise "No :socket parameter specified" unless params[:socket]
       @lqlpath = params[:socket]
       @nql_parser = NQL.new
       # need to create the logger first so it initializes the log levels

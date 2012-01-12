@@ -17,7 +17,7 @@ begin
     gem.add_development_dependency 'rspec', '>= 2.7'
     gem.add_development_dependency 'yard', '>= 0.7.4'
     gem.add_development_dependency 'yard-sinatra', '>= 1.0.0'
-    gem.add_dependency 'sinatra', '>= 1.2.3'
+    gem.add_dependency 'sinatra', '>= 1.3.2'
     gem.add_dependency 'sinatra-respond_to', '>= 0.7.0'
     gem.add_dependency 'log4r', '>= 1.1.9'
     gem.add_dependency 'haml', '>= 3.0.25'

@@ -1,0 +1,20 @@
+%html
+  %head
+    %title Nagix: Services
+    %link(rel="stylesheet" href="/css/nagix.css")
+
+%body
+  %h1 Services
+
+  %table.table
+    %tr
+      %thead
+        %th.th Service
+        %th.th Attributes
+      %tbody
+        -@services.each do |services|
+          %tr
+            %td= services['description']
+
+  #copyright
+    %p Powered by Nagiolista v0.0.3.
