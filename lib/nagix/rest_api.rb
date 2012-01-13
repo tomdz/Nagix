@@ -89,7 +89,7 @@ module Nagix
       @services = query("SELECT * FROM services") || {}
       respond_to do |wants|
         wants.html { haml :services }
-        wants.json { @services.to_json }
+        wants.json { params[:pretty] ? JSON.pretty_generate(@services) : @services.to_json }
       end
     end
 
@@ -145,6 +145,16 @@ module Nagix
               :servicegroup => params[:name]
     end
 
+    # Returns all hosts configured in Nagios. Supports either html or json via the `Accept`
+    # header (`text/html` vs. `application/json`) or file ending (`.../status.html` or `.../status.json`).
+    get "/hosts" do
+      @hosts = query("SELECT * FROM hosts") || {}
+      respond_to do |wants|
+        wants.html { haml :hosts }
+        wants.json { params[:pretty] ? JSON.pretty_generate(@hosts) : @hosts.to_json }
+      end
+    end
+
     # Returns the status (via MK Livestatus) for the given host. Supports either html or json
     # via the `Accept` header (`text/html` vs. `application/json`) or file ending (`.../status.html` or
     # `.../status.json`).
@@ -154,7 +164,7 @@ module Nagix
       halt(404, "Host #{@host_name} not found") if @hosts == nil or @hosts.empty?
       respond_to do |wants|
         wants.html { haml :host }
-        wants.json { @hosts.to_json }
+        wants.json { params[:pretty] ? JSON.pretty_generate(@hosts) : @hosts.to_json }
       end
     end
 
@@ -223,7 +233,7 @@ module Nagix
       @services = query("SELECT * FROM services WHERE host_name = '#{host[0]['name']}'") || {}
       respond_to do |wants|
         wants.html { haml :services }
-        wants.json { @services.to_json }
+        wants.json { params[:pretty] ? JSON.pretty_generate(@services) : @services.to_json }
       end
     end
 
@@ -267,7 +277,7 @@ module Nagix
       halt(404, "Host #{@host_name} not found") if @hosts == nil or @hosts.empty?
       respond_to do |wants|
         wants.html { haml :host }
-        wants.json { @hosts.to_json }
+        wants.json { params[:pretty] ? JSON.pretty_generate(@hosts) : @hosts.to_json }
       end
     end
 
