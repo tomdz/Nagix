@@ -44,7 +44,6 @@ module Nagix
         lql.execute(cmd_name, params)
         status 200
       rescue Exception => e
-        puts "#{$!}\n\t" + e.backtrace.join("\n\t")
         logger.error "#{$!}\n\t" + e.backtrace.join("\n\t")
         halt 400, e.message
       end
