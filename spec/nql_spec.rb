@@ -4,6 +4,10 @@ $LOAD_PATH.unshift(lib_dir) if File.directory?(lib_dir) && !$LOAD_PATH.include?(
 require 'nagix'
 require 'yaml'
 
+RSpec.configure do |config|
+  config.mock_with :flexmock
+end
+
 describe Nagix::NQL do
 	let(:nql) { Nagix::NQL.new }
 
@@ -144,6 +148,20 @@ describe Nagix::NQL do
 	  it "creates a GET query for the column a from x where a = 'foo' or b = 'foo' or c = 'foo'" do
       query = nql.parse("SELECT a FROM x WHERE a = 'foo' OR b = 'foo' OR c = 'foo'")
 	    query.should eq("GET x\nResponseHeader: fixed16\nColumns: a\nColumnHeaders: on\nFilter: a = foo\nFilter: b = foo\nFilter: c = foo\nOr: 2\nOr: 2\n")
+	  end
+	end
+
+	describe "SELECT a FROM x WHERE a = '' OR b = '' OR c = ''" do
+	  it "creates a GET query for the column a from x where a = '' or b = '' or c = ''" do
+      query = nql.parse("SELECT a FROM x WHERE a = '' OR b = '' OR c = ''")
+	    query.should eq("GET x\nResponseHeader: fixed16\nColumns: a\nColumnHeaders: on\nFilter: a = \nFilter: b = \nFilter: c = \nOr: 2\nOr: 2\n")
+	  end
+	end
+
+	describe "SELECT a FROM x WHERE a contains 'foo' OR b = 'foo'" do
+	  it "creates a GET query for the column a from x where a contains 'foo' or b = 'foo'" do
+      query = nql.parse("SELECT a FROM x WHERE a contains 'foo' OR b = 'foo'")
+	    query.should eq("GET x\nResponseHeader: fixed16\nColumns: a\nColumnHeaders: on\nFilter: a >= foo\nFilter: b = foo\nOr: 2\n")
 	  end
 	end
 end

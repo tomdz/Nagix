@@ -21,9 +21,9 @@ module Nagix
     rule(:lparen)         { str("(") >> whitespace? }
     rule(:rparen)         { str(")") >> whitespace? }
 
-    rule(:operator)       { str('=') | str('!=') | str('>=') | str('<=') | str('>') | str('<') }
+    rule(:operator)       { str('=') | str('!=') | str('>=') | str('<=') | str('>') | str('<') | str('contains') }
     rule(:identifier)     { match('[A-Za-z0-9_]').repeat(1) }
-    rule(:string)         { quote >> (escape | nonquote).repeat(1).as(:str) >> quote }
+    rule(:string)         { quote >> (escape | nonquote).repeat(0).as(:str) >> quote }
     rule(:integer)        { (str('+') | str('-')).maybe >> match('[0-9]').repeat(1) }
     rule(:float)          { integer >> (str('.') >> match('[0-9]').repeat(1) | str('e') >> match('[0-9]').repeat(1)) }
     rule(:literal)        { string | float.as(:float) | integer.as(:integer) }
@@ -45,12 +45,13 @@ module Nagix
 
   class NQLTransformer < Parslet::Transform
     rule(:str => simple(:str)) { String(str) }
+    rule(:str => []) { "" }
     rule(:integer => simple(:integer)) { Integer(integer) }
     rule(:float => simple(:float)) { Float(float) }
 
     rule(:column => simple(:column)) { String(column) }
 
-    rule(:identifier => simple(:identifier), :op => simple(:op), :expression => subtree(:expression)) { "\nFilter: #{identifier} #{op} #{expression}" }
+    rule(:identifier => simple(:identifier), :op => simple(:op), :expression => subtree(:expression)) { "\nFilter: #{identifier} #{op == 'contains' ? '>=' : op} #{expression}" }
     rule(:is_null => { :identifier => simple(:identifier) }) { "\nFilter: #{identifier}" }
     rule(:and => { :left => subtree(:left), :right => simple(:right) }) { "#{left}#{right}\nAnd: 2" }
     rule(:or => { :left => subtree(:left), :right => simple(:right) }) { "#{left}#{right}\nOr: 2" }

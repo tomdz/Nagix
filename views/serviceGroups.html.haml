@@ -1,0 +1,20 @@
+%html
+  %head
+    %title Nagix: Service groups
+    %link(rel="stylesheet" href="/css/nagix.css")
+
+%body
+  %h1 Service groups
+
+  %table.table
+    %tr
+      %thead
+        %th.th Service group
+        %th.th Attributes
+      %tbody
+        -@serviceGroups.each do |serviceGroup|
+          %tr
+            %td= serviceGroup['name']
+
+  #copyright
+    %p Powered by Nagiolista v0.0.3.

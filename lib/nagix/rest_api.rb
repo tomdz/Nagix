@@ -2,9 +2,8 @@ require 'rubygems'
 require 'sinatra'
 require 'rack/conneg'
 require 'json'
-require 'nagix/setup'
-require 'nagix/mk_livestatus'
 require 'haml'
+require 'nagix/setup'
 
 module Nagix
   # The Nagix REST API, which is available under `/1.0/rest`.
@@ -39,14 +38,13 @@ module Nagix
     # @param [String] cmd_name The command
     # @param [Hash,nil] params A hash with parameters for the command, if any
     # @return [void]
-    def execute(cmd_name, params)
+    def execute(cmd_name, params = {})
       begin
-        lql = Nagix::MKLivestatus.new(:socket => settings.mklivestatus_socket,
-                                      :log_file => settings.mklivestatus_log_file,
-                                      :log_level => settings.mklivestatus_log_level)
+        lql = settings.create_lql
         lql.execute(cmd_name, params)
         status 200
       rescue Exception => e
+        puts "#{$!}\n\t" + e.backtrace.join("\n\t")
         logger.error "#{$!}\n\t" + e.backtrace.join("\n\t")
         halt 400, e.message
       end
@@ -59,10 +57,9 @@ module Nagix
     # @return [Hash,void] The query result
     def query(nql_query)
       begin
-        lql = Nagix::MKLivestatus.new(:socket => settings.mklivestatus_socket,
-                                      :log_file => settings.mklivestatus_log_file,
-                                      :log_level => settings.mklivestatus_log_level)
-        lql.query(nql_query)
+        lql = settings.create_lql
+        result = lql.query(nql_query)
+        result
       rescue Exception => e
         logger.error "#{$!}\n\t" + e.backtrace.join("\n\t")
         halt 400, e.message
@@ -76,10 +73,10 @@ module Nagix
     # @param [String] default_value The default value, used when value = `nil`
     # @return [Integer] 1 for `true`, 0 otherwise
     def bool_to_num(value, default_value)
-      if "true".casecmp(value || default_value.to_s)
-        1
+      if value.nil?
+        "true".casecmp(default_value.to_s) == 0 ? 1 : 0
       else
-        0
+        "true".casecmp(value.to_s) == 0 ? 1 : 0
       end
     end
 
@@ -115,6 +112,42 @@ module Nagix
     # Equivalent to [`DISABLE_NOTIFICATIONS`](http://old.nagios.org/developerinfo/externalcommands/commandinfo.php?command_id=7).
     delete "/notifications" do
       execute :DISABLE_NOTIFICATIONS
+    end
+
+    # Returns all service groups. Supports either html or json  via the `Accept` header (`text/html` vs.
+    # `application/json`) or file ending (`.../status.html` or `.../status.json`).
+    get "/serviceGroups" do
+      @serviceGroups = query("SELECT * FROM servicegroups") || {}
+      respond_to do |wants|
+        wants.html { haml :serviceGroups }
+        wants.json { params[:pretty] ? JSON.pretty_generate(@serviceGroups) : @serviceGroups.to_json }
+      end
+    end
+
+    # Returns the indicated service group. Supports either html or json  via the `Accept` header (`text/html`
+    # vs. `application/json`) or file ending (`.../status.html` or `.../status.json`).
+    get "/serviceGroups/:name" do
+      name = params[:name]
+      @serviceGroups = query("SELECT * FROM servicegroups WHERE name = '#{name}' OR alias = '#{name}'") || {}
+      halt(404, "Service group #{@name} not found") if @serviceGroups == nil or @serviceGroups.empty?
+      respond_to do |wants|
+        wants.html { haml :serviceGroups }
+        wants.json { params[:pretty] ? JSON.pretty_generate(@serviceGroups) : @serviceGroups.to_json }
+      end
+    end
+
+    # Returns the service in the given service group. Supports either html or json via the
+    # `Accept` header (`text/html` vs. `application/json`) or file ending (`.../status.html` or
+    # `.../status.json`).
+    get "/serviceGroups/:name/services" do
+      name = params[:name]
+      serviceGroups = query("SELECT * FROM servicegroups WHERE name = '#{name}' OR alias = '#{name}'") || {}
+      halt(404, "Service group #{@name} not found") if serviceGroups == nil or serviceGroups.empty?
+      @services = query("SELECT * FROM services WHERE groups contains '#{serviceGroups[0]['name']}'") || {}
+      respond_to do |wants|
+        wants.html { haml :services }
+        wants.json { params[:pretty] ? JSON.pretty_generate(@services) : @services.to_json }
+      end
     end
 
     # Enables checks for all services in the specified service group.
@@ -155,11 +188,11 @@ module Nagix
       end
     end
 
-    # Returns the status (via MK Livestatus) for the given host. Supports either html or json
+    # Returns the status for the given host. Supports either html or json
     # via the `Accept` header (`text/html` vs. `application/json`) or file ending (`.../status.html` or
     # `.../status.json`).
-    get "/hosts/:name/status" do
-      @host_name = params[:host_name]
+    get "/hosts/:name" do
+      @host_name = params[:name]
       @hosts = query("SELECT * FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
       halt(404, "Host #{@host_name} not found") if @hosts == nil or @hosts.empty?
       respond_to do |wants|
@@ -181,11 +214,11 @@ module Nagix
     put "/hosts/:name/acknowledgement" do
       execute :ACKNOWLEDGE_HOST_PROBLEM,
               :host_name => params[:name],
-              :sticky => bool_to_num(request.params[:sticky], true),
-              :notify => bool_to_num(request.params[:notify], true),
-              :persistent => bool_to_num(request.params[:persistent], true),
-              :author => request.params[:persistent] || '',
-              :comment => request.params[:persistent] || ''
+              :sticky => bool_to_num(params[:sticky], true),
+              :notify => bool_to_num(params[:notify], true),
+              :persistent => bool_to_num(params[:persistent], true),
+              :author => params[:author] || '',
+              :comment => params[:comment] || ''
     end
 
     # Removes the problem acknowledgement for the given host.
@@ -228,9 +261,9 @@ module Nagix
     # `.../status.json`).
     get "/hosts/:name/services" do
       @host_name = params[:name]
-      host = query("SELECT name FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
-      halt(404, "Host #{@host_name} not found") if @hosts == nil or @hosts.empty?
-      @services = query("SELECT * FROM services WHERE host_name = '#{host[0]['name']}'") || {}
+      hosts = query("SELECT name FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
+      halt(404, "Host #{@host_name} not found") if hosts == nil or hosts.empty?
+      @services = query("SELECT * FROM services WHERE host_name = '#{hosts[0]['name']}'") || {}
       respond_to do |wants|
         wants.html { haml :services }
         wants.json { params[:pretty] ? JSON.pretty_generate(@services) : @services.to_json }
@@ -268,7 +301,7 @@ module Nagix
     # Returns the status (MK Livestatus) for the given service on the given host. Supports either
     # html or json  via the `Accept` header (`text/html` vs. `application/json`) or file ending
     # (`.../status.html` or `.../status.json`).
-    get "/hosts/:name/services/:service/status" do
+    get "/hosts/:name/services/:service" do
       @host_name = params[:name]
       @service_description = params[:service]
       host = query("SELECT name FROM hosts WHERE host_name = '#{@host_name}' OR alias = '#{@host_name}' OR address = '#{@host_name}'")
@@ -295,11 +328,11 @@ module Nagix
       execute :ACKNOWLEDGE_SVC_PROBLEM,
               :host_name => params[:name],
               :service_description => params[:service],
-              :sticky => bool_to_num(request.params[:sticky], true),
-              :notify => bool_to_num(request.params[:notify], true),
-              :persistent => bool_to_num(request.params[:persistent], true),
-              :author => request.params[:persistent] || '',
-              :comment => request.params[:persistent] || ''
+              :sticky => bool_to_num(params[:sticky], true),
+              :notify => bool_to_num(params[:notify], true),
+              :persistent => bool_to_num(params[:persistent], true),
+              :author => params[:author] || '',
+              :comment => params[:comment] || ''
     end
 
     # Removes the problem acknowledgement for the given service on the given host.
@@ -314,14 +347,16 @@ module Nagix
     # Equivalent to [`ENABLE_SVC_NOTIFICATIONS`](http://old.nagios.org/developerinfo/externalcommands/commandinfo.php?command_id=11).
     put "/hosts/:name/services/:service/notifications" do
       execute :ENABLE_SVC_NOTIFICATIONS,
-              :host_name => params[:name]
+              :host_name => params[:name],
+              :service_description => params[:service]
     end
 
     # Disables notifications for the given service on the given host.
     # Equivalent to [`DISABLE_SVC_NOTIFICATIONS`](http://old.nagios.org/developerinfo/externalcommands/commandinfo.php?command_id=12).
     delete "/hosts/:name/services/:service/notifications" do
       execute :DISABLE_SVC_NOTIFICATIONS,
-              :host_name => params[:name]
+              :host_name => params[:name],
+              :service_description => params[:service]
     end
   end
 end

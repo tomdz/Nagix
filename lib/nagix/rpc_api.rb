@@ -1,26 +1,22 @@
 require 'sinatra'
 require 'json'
 require 'nagix/setup'
-require 'nagix/mk_livestatus'
 
 module Nagix
   class RpcApi < Sinatra::Base
     configure do
-      config = Setup::setup_from_args
-      if config
-        config.to_hash.each do |k,v|
-          set k.to_sym, v
-        end
+      Setup::setup_from_args.each do |k,v|
+        set k.to_sym, v
       end
 
+      set :root, File.expand_path("../..", File.dirname(__FILE__))
       set :appname, "nagix-rpc-api"
+      enable :logging
     end
 
-    def execute(cmd_name, params)
+    def execute(cmd_name, params = {})
       begin
-        lql = Nagix::MKLivestatus.new(:socket => settings.mklivestatus_socket,
-                                      :log_file => settings.mklivestatus_log_file,
-                                      :log_level => settings.mklivestatus_log_level)
+        lql = settings.create_lql
         lql.execute(cmd_name, params)
         status 200
       rescue Exception => e
@@ -30,9 +26,7 @@ module Nagix
 
     def query(nql_query)
       begin
-        lql = Nagix::MKLivestatus.new(:socket => settings.mklivestatus_socket,
-                                      :log_file => settings.mklivestatus_log_file,
-                                      :log_level => settings.mklivestatus_log_level)
+        lql = settings.create_lql
         lql.query(nql_query)
       rescue Exception => e
         halt 400, e.message

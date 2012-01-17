@@ -15,6 +15,7 @@ begin
     gem.required_ruby_version = '>= 1.8.7'
     gem.files = FileList['lib/**/*.rb', 'bin/*', 'lib/**/config.ru', 'public/**/*', 'views/**/*', '[A-Z]*'].to_a
     gem.add_development_dependency 'rspec', '>= 2.7'
+    gem.add_development_dependency 'rack-test', '>= 0.6.1'
     gem.add_development_dependency 'yard', '>= 0.7.4'
     gem.add_development_dependency 'yard-sinatra', '>= 1.0.0'
     gem.add_dependency 'sinatra', '>= 1.3.2'

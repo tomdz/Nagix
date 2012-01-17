@@ -43,9 +43,7 @@ module Nagix
       @columns = "Columns: " + @qsparams['attribute'].join(' ') + "\n" if @qsparams['attribute'].kind_of?(Array)
       @columns = "Columns: " + @qsparams['attribute'] + "\n" if @qsparams['attribute'].kind_of?(String)
 
-      @lql = Nagix::MKLivestatus.new(:socket => settings.mklivestatus_socket,
-                                     :log_file => settings.mklivestatus_log_file,
-                                     :log_level => settings.mklivestatus_log_level)
+      @lql = settings.create_lql
     end
 
     get '/' do
