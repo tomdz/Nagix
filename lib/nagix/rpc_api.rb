@@ -20,14 +20,8 @@ module Nagix
     end
 
     def query(nql_query)
-      begin
-        lql = settings.create_lql
-        lql.query(nql_query)
-      rescue Exception => e
-        puts "#{$!}\n\t" + e.backtrace.join("\n\t")
-        logger.error "#{$!}\n\t" + e.backtrace.join("\n\t")
-        halt 400, e.message
-      end
+      lql = settings.create_lql
+      lql.query(nql_query)
     end
 
     def status_query(host_name, service_description)
@@ -57,7 +51,6 @@ module Nagix
       rescue JSON::ParserError
         result = { :jsonrpc => '2.0', :error => { :code => 400, :message => 'JSON parse error' } }
       rescue => e
-        puts "#{$!}\n\t" + e.backtrace.join("\n\t")
         logger.error "#{$!}\n\t" + e.backtrace.join("\n\t")
         result = { :jsonrpc => '2.0', :error => { :code => 500, :message => e.message } }
       end
@@ -76,8 +69,10 @@ module Nagix
             execute(method, inquiry_params)
             result = { :jsonrpc => '2.0', :result => true, :id => inquiry['id'] }
           end
+        rescue Nagix::NagiosXcmd::Error => e
+          logger.error "#{$!}\n\t" + e.backtrace.join("\n\t")
+          result = { :jsonrpc => '2.0', :error => { :code => 400, :message => e.message }, :id => inquiry['id'] }
         rescue => e
-          puts "#{$!}\n\t" + e.backtrace.join("\n\t")
           logger.error "#{$!}\n\t" + e.backtrace.join("\n\t")
           result = { :jsonrpc => '2.0', :error => { :code => 500, :message => e.message }, :id => inquiry['id'] }
         end

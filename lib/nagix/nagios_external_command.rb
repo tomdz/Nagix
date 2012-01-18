@@ -37,6 +37,7 @@ module Nagix
 
     class Error < StandardError; end
     class MissingParameters < Error; end
+    class UnknownCommand < Error; end
 
     def initialize(napixcmd, params)
       @napixcmd = napixcmd.to_sym
@@ -47,6 +48,8 @@ module Nagix
           raise MissingParameters, "Missing parameter #{p} for Nagios External Command #{@napixcmd}; see #{NagiosXcmd.docurl(@napixcmd)}" if params[p.to_sym] == nil
           @cmd += ";#{params[p.to_sym]}"
         end
+      else
+        raise UnknownCommand, "Unknown Nagios External Command #{@napixcmd}"
       end
     end
 
