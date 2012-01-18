@@ -14,7 +14,7 @@ end
 describe Nagix::RestApi do
   include Rack::Test::Methods
 
-  class RequestBuilder
+  class RestRequestBuilder
     attr_reader :lql, :data, :result_key, :expected_value
 
     def initialize(lql, &block)
@@ -25,10 +25,6 @@ describe Nagix::RestApi do
 
     def command(cmd, params = {})
       @lql.should_receive(:execute).with(cmd, params).once
-    end
-
-    def parameters(items)
-      @params = items
     end
 
     def result(item)
@@ -52,7 +48,7 @@ describe Nagix::RestApi do
   end
 
   def get_test(uri, &block)
-    request = RequestBuilder.new(flexmock(), &block)
+    request = RestRequestBuilder.new(flexmock(), &block)
     Nagix::RestApi.set :create_lql, Proc.new { request.lql }
 
     get uri
@@ -71,7 +67,7 @@ describe Nagix::RestApi do
   end
 
   def put_test(uri, &block)
-    request = RequestBuilder.new(flexmock(), &block)
+    request = RestRequestBuilder.new(flexmock(), &block)
     Nagix::RestApi.set :create_lql, Proc.new { request.lql }
 
     put uri
@@ -80,7 +76,7 @@ describe Nagix::RestApi do
   end
 
   def delete_test(uri, &block)
-    request = RequestBuilder.new(flexmock(), &block)
+    request = RestRequestBuilder.new(flexmock(), &block)
     Nagix::RestApi.set :create_lql, Proc.new { request.lql }
 
     delete uri
@@ -342,7 +338,7 @@ describe Nagix::RestApi do
     it "returns services of indicated host" do
       get_test "/hosts/foo/services.json"do
         data "SELECT name FROM hosts WHERE host_name = 'foo' OR alias = 'foo' OR address = 'foo'" => 
-                 [ { "name" => "foo", "address" => "127.0.0.1" } ]
+                 [ { "name" => "foo" } ]
         result "SELECT * FROM services WHERE host_name = 'foo'" => 
                    [ { "description" => "dummy1", "groups" => "test", "host_name" => "foo" },
                      { "description" => "dummy2", "groups" => "test", "host_name" => "foo" } ]
@@ -392,7 +388,7 @@ describe Nagix::RestApi do
     it "returns 404 if service not found" do
       get_test "/hosts/foo/services/bar.json" do
         data "SELECT name FROM hosts WHERE host_name = 'foo' OR alias = 'foo' OR address = 'foo'" => 
-                 [ { "name" => "foo", "address" => "127.0.0.1" } ],
+                 [ { "name" => "foo" } ],
              "SELECT * FROM services WHERE host_name = 'foo' AND description = 'bar'" => 
                  [ ]
       end
@@ -401,7 +397,7 @@ describe Nagix::RestApi do
     it "returns named service of indicated host" do
       get_test "/hosts/foo/services/bar.json"do
         data "SELECT name FROM hosts WHERE host_name = 'foo' OR alias = 'foo' OR address = 'foo'" => 
-                 [ { "name" => "foo", "address" => "127.0.0.1" } ]
+                 [ { "name" => "foo" } ]
         result "SELECT * FROM services WHERE host_name = 'foo' AND description = 'bar'" => 
                    [ { "description" => "bar", "groups" => "test", "host_name" => "foo" } ]
       end
