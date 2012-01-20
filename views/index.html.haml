@@ -1,11 +1,15 @@
-#formbox
-  %form{ :action => "/hosts", :method => "get"}
-    %fieldset
-      %legend Enter hostname or hostname/service.
-      #form_row
-        %label{:for => "host_name"} Hostname:
-        %input{:type => "text", :name => "host_name", :class => "text"}
-        %label{:for => "service_description"} Service:
-        %input{:type => "text", :name => "service_description", :class => "text"} (optional)
-      #form_row
-        %input{:type => "submit", :value => "Fetch!", :class => "button"}
+%form{ :action => "/hosts", :method => "get" }
+  %fieldset
+    %legend Enter hostname or hostname/service.
+    .clearfix
+      %label{ :for => "host_name" } Hostname:
+      .input
+        %input{ :class => "xlarge", :type => "text", :id => "host_name", :name => "host_name" }
+    .clearfix
+      %label{ :for => "service_description" } Service:
+      .input
+        %input{ :class => "xlarge", :type => "text", :id => "service_description", :name => "service_description" }
+        %span(class = "help-inline") (optional)
+    .actions
+      %input{ :class => "btn primary", :type => "submit", :value => "Fetch!" }
+      %input{ :class => "btn", :type => "reset", :value => "Reset" }

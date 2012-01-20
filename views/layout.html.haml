@@ -1,19 +1,22 @@
-%html
+!!! 5
+%html(lang = "en")
   %head
-    %title #{settings.appname.capitalize}
-    %link(rel="stylesheet" href="/css/#{settings.appname}.css")
-
-%body
-  #page
-    #header
-      %h4 #{settings.appname.upcase}
-    #nav
-      %a{:title => "Home", :href => "/"} Home
-      |
-      %a{:title => "Nagios", :href => "/nagios"} Nagios
-
-    #content
-      = yield
-
-  #copyright
-    %p Powered by #{settings.appname.capitalize} v0.0.3.
+    %title Nagix
+    %link{:rel => "stylesheet", :href => "file:///Users/tomdz/Documents/open-source/Nagix/public/css/nagix.css", :type => "text/css"}
+  %body{ :style => "padding-top: 50px;" }
+    .topbar
+      .fill
+        .container
+          %a{ :class => "brand", :href => "/" }Nagix
+          %ul(class = "nav")
+            %li(class = "active")
+              %a(href = "/") Home
+            %li
+              %a(href = "/nagios") Nagios
+    .container
+      .row
+        .span4
+        .span12
+          = yield
+      %footer
+        %p Powered by Nagix v0.0.1
