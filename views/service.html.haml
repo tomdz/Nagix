@@ -1,0 +1,24 @@
+- @page = "host"
+:javascript
+  $(document).ready(function() {
+    var host = getParameterByName("host")
+    var service = getParameterByName("service")
+    $.getJSON("/1.0/rest/hosts/" + encodeURIComponent(host) + "/services/" + encodeURIComponent(service) + ".json", function(data) {
+      var str = ''
+      var serviceData = data[0]
+      var keys = keysOf(serviceData).sort()
+      for (var idx in keys) {
+        var key = keys[idx]
+        str = str + "<tr><td>" + key + "</td><td>" + serviceData[key] + "</td></tr>"
+      }
+      $("#heading").text(serviceData["display_name"] + " on " + serviceData["host_name"] + " (" + serviceData["host_alias"] + ")")
+      $("#host > tbody:last").append(str);
+    })
+  })
+%h1{:id => "heading"}
+%table{:id => "host", :cellpadding => "0", :cellspacing => "0", :border => "0", :class => "bordered-table zebra-striped"}
+  %thead
+    %tr
+      %th Attribute
+      %th Value
+  %tbody

@@ -47,8 +47,24 @@ module Nagix
       haml :index
     end
 
+    get '/hostgroups' do
+      haml :hostgroups
+    end
+
+    get '/host' do
+      haml :host
+    end
+
     get '/hosts' do
       haml :hosts
+    end
+
+    get '/servicegroups' do
+      haml :servicegroups
+    end
+
+    get '/service' do
+      haml :service
     end
 
     get '/services' do

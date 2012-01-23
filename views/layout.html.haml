@@ -7,6 +7,7 @@
     %script{:type => "text/javascript", :src  => "/js/jquery-1.7.1.min.js"}
     %script{:type => "text/javascript", :src  => "/js/jquery.dataTables-1.8.2.min.js"}
     %script{:type => "text/javascript", :src  => "/js/jquery.dataTables.paging.js"}
+    %script{:type => "text/javascript", :src  => "/js/custom.js"}
   %body
     .topbar
       .fill
@@ -15,8 +16,12 @@
           %ul(class = "nav")
             %li{:class => "#{@page == 'index' ? 'active' : ''}"}
               %a(href = "/") Home
+            %li{:class => "#{@page == 'hostgroups' ? 'active' : ''}"}
+              %a(href = "/hostgroups") Host groups
             %li{:class => "#{@page == 'hosts' ? 'active' : ''}"}
               %a(href = "/hosts") Hosts
+            %li{:class => "#{@page == 'servicegroups' ? 'active' : ''}"}
+              %a(href = "/servicegroups") Services groups
             %li{:class => "#{@page == 'services' ? 'active' : ''}"}
               %a(href = "/services") Services
             %li{:class => "#{@page == 'nagios' ? 'active' : ''}"}

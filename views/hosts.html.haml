@@ -4,11 +4,39 @@
       "sSortAsc": "header headerSortDown",
       "sSortDesc": "header headerSortUp",
       "sSortable": "header"
-  }); 
+  });
+
   $(document).ready(function() {
     var dataTable = $("#hosts")
+    var columnDefs = [
+      { "aTargets" : [0], "sType": "html", "fnRender" : function(obj) {
+        var host = obj.aData[obj.iDataColumn]
+        return "<a href='/host?host=" + encodeURIComponent(host) + "'>" + host + "</a>"
+      } },
+      { "aTargets" : [ 3 ], "sType": "html", "fnRender" : function(obj) {
+        var data = obj.aData[obj.iDataColumn]
+        var groups = data.split(',')
+        var str = ''
+        for (var idx in groups) {
+          str += "<a href='/hostgroup?group=" + encodeURIComponent(groups[idx]) + "'>" + groups[idx] + "</a><br/>"
+        }
+        return str
+      } },
+      { "aTargets" : [ 4 ], "sType": "html", "fnRender" : function(obj) {
+        // at this point, the aData entry for host is already a link, so we need to extract the host from it
+        var host = obj.aData[0].match(/'>([^<]*)</)[1]
+        var data = obj.aData[obj.iDataColumn]
+        var services = data.split(',')
+        var str = ''
+        for (var idx in services) {
+          str += "<a href='/service?host=" + encodeURIComponent(host) + "&service=" + encodeURIComponent(services[idx]) + "'>" + services[idx] + "</a><br/>"
+        }
+        return str
+      } }
+    ]
     dataTable.dataTable({
       "sDom": "<'row'<'span8'l><'span8'f>r>t<'row'<'span8'i><'span8'p>>",
+      "aoColumnDefs" : columnDefs,
       "sPaginationType": "bootstrap",
       "oLanguage": {
         "sLengthMenu": "_MENU_ records per page"

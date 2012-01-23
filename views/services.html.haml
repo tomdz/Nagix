@@ -7,8 +7,32 @@
   }); 
   $(document).ready(function() {
     var dataTable = $("#services")
+    var columns = [
+      { "sTitle" : "Name", "sType": "html", "fnRender" : function(obj) {
+        var service = obj.aData[obj.iDataColumn]
+        var host = obj.aData[3]
+        return "<a href='/service?host=" + encodeURIComponent(host) + "&service=" + encodeURIComponent(service) + "'>" + service + "</a>"
+      } },
+      { "sTitle" : "Description", "sType": "string" },
+      { "sTitle" : "Groups", "sType": "html", "fnRender" : function(obj) {
+        var data = obj.aData[obj.iDataColumn]
+        var groups = data.split(',')
+        var str = ''
+        for (var idx in groups) {
+          str += "<a href='/servicegroup?group=" + encodeURIComponent(groups[idx]) + "'>" + groups[idx] + "</a><br/>"
+        }
+        return str
+      } },
+      { "sTitle" : "Host name", "sType": "html", "fnRender" : function(obj) {
+        var host = obj.aData[obj.iDataColumn]
+        return "<a href='/host?host=" + encodeURIComponent(host) + "'>" + host + "</a><br/>"
+      } },
+      { "sTitle" : "Host address", "sType": "string" },
+      { "sTitle" : "Host alias", "sType": "string" }
+    ]
     dataTable.dataTable({
       "sDom": "<'row'<'span8'l><'span8'f>r>t<'row'<'span8'i><'span8'p>>",
+      "aoColumns" : columns,
       "sPaginationType": "bootstrap",
       "oLanguage": {
         "sLengthMenu": "_MENU_ records per page"
