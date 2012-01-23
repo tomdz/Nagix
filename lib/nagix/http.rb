@@ -59,6 +59,10 @@ module Nagix
       haml :hosts
     end
 
+    get '/servicegroup' do
+      haml :servicegroup
+    end
+
     get '/servicegroups' do
       haml :servicegroups
     end
