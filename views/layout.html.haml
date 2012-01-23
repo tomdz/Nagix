@@ -2,21 +2,26 @@
 %html(lang = "en")
   %head
     %title Nagix
-    %link{:rel => "stylesheet", :href => "/css/nagix.css", :type => "text/css"}
-  %body{ :style => "padding-top: 50px;" }
+    %link{:rel => "stylesheet", :href => "/css/bootstrap.css", :type => "text/css"}
+    %link{:rel => "stylesheet", :href => "/css/custom.css", :type => "text/css"}
+    %script{:type => "text/javascript", :src  => "/js/jquery-1.7.1.min.js"}
+    %script{:type => "text/javascript", :src  => "/js/jquery.dataTables-1.8.2.min.js"}
+    %script{:type => "text/javascript", :src  => "/js/jquery.dataTables.paging.js"}
+  %body
     .topbar
       .fill
         .container
-          %a{ :class => "brand", :href => "/" }Nagix
+          %a{:class => "brand", :href => "/"}Nagix
           %ul(class = "nav")
-            %li(class = "active")
+            %li{:class => "#{@page == 'index' ? 'active' : ''}"}
               %a(href = "/") Home
-            %li
+            %li{:class => "#{@page == 'hosts' ? 'active' : ''}"}
+              %a(href = "/hosts") Hosts
+            %li{:class => "#{@page == 'services' ? 'active' : ''}"}
+              %a(href = "/services") Services
+            %li{:class => "#{@page == 'nagios' ? 'active' : ''}"}
               %a(href = "/nagios") Nagios
     .container
-      .row
-        .span4
-        .span12
-          = yield
+      = yield
       %footer
         %p Powered by Nagix v0.0.1

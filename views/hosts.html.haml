@@ -1,20 +1,34 @@
-%html
-  %head
-    %title Nagilista: Hosts
-    %link(rel="stylesheet" href="/css/nagix.css")
-
-%body
-  %h1 Hosts
-
-  %table.table
+- @page = "hosts"
+:javascript
+  $.extend( $.fn.dataTableExt.oStdClasses, {
+      "sSortAsc": "header headerSortDown",
+      "sSortDesc": "header headerSortUp",
+      "sSortable": "header"
+  }); 
+  $(document).ready(function() {
+    var dataTable = $("#hosts")
+    dataTable.dataTable({
+      "sDom": "<'row'<'span8'l><'span8'f>r>t<'row'<'span8'i><'span8'p>>",
+      "sPaginationType": "bootstrap",
+      "oLanguage": {
+        "sLengthMenu": "_MENU_ records per page"
+      }
+    })
+    $.getJSON("/1.0/rest/hosts.json", function(data) {
+      var tableData = []
+      for (var idx in data) {
+        var item = data[idx]
+        tableData.push([item.name, item.address, item.alias, item.groups, item.services])
+      }
+      dataTable.fnAddData(tableData)
+    })
+  })
+%table{:id => "hosts", :cellpadding => "0", :cellspacing => "0", :border => "0", :class => "bordered-table zebra-striped"}
+  %thead
     %tr
-      %thead
-        %th.th Host
-        %th.th Attributes
-      %tbody
-        -@hosts.each do |host|
-          %tr
-            %td= host['name']
-
-  #copyright
-    %p Powered by Nagiolista v0.0.3.
+      %th Name
+      %th IP
+      %th Alias
+      %th Groups
+      %th Services
+  %tbody

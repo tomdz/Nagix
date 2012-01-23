@@ -1,0 +1,12 @@
+- @page = "nagios"
+%table
+  %thead
+    %tr
+      %th Attribute
+      %th Value
+  %tbody
+    - @items.each do |item|
+      - item.keys.sort.each do |attr|
+        %tr
+          %td= attr
+          %td= item[attr]

@@ -1,15 +1,67 @@
-%form{ :action => "/hosts", :method => "get" }
-  %fieldset
-    %legend Enter hostname or hostname/service.
-    .clearfix
-      %label{ :for => "host_name" } Hostname:
-      .input
-        %input{ :class => "xlarge", :type => "text", :id => "host_name", :name => "host_name" }
-    .clearfix
-      %label{ :for => "service_description" } Service:
-      .input
-        %input{ :class => "xlarge", :type => "text", :id => "service_description", :name => "service_description" }
-        %span(class = "help-inline") (optional)
-    .actions
-      %input{ :class => "btn primary", :type => "submit", :value => "Fetch!" }
-      %input{ :class => "btn", :type => "reset", :value => "Reset" }
+- @page = "index"
+:javascript
+  $.extend( $.fn.dataTableExt.oStdClasses, {
+      "sSortAsc": "header headerSortDown",
+      "sSortDesc": "header headerSortUp",
+      "sSortable": "header"
+  }); 
+  $(document).ready(function() {
+    var dataTable = $("#hosts")
+    dataTable.dataTable({
+      "sDom": "<'row'<'span8'l><'span8'f>r>t<'row'<'span8'i><'span8'p>>",
+      "sPaginationType": "bootstrap",
+      "oLanguage": {
+        "sLengthMenu": "_MENU_ records per page"
+      }
+    })
+    $("#search-form").submit(function() {
+      var host = $("#host").val()
+      var service = $("#service").val()
+      var url = "/1.0/rest/hosts"
+      if (host) {
+        url = url + "/" + encodeURIComponent(host)
+        if (service) {
+          url = url + "/services/" + encodeURIComponent(service)
+        }
+      }
+      url = url + ".json"
+      $.getJSON(url, function(data) {
+        var tableData = []
+        for (var idx in data) {
+          var item = data[idx]
+          tableData.push([item.name, item.address, item.alias, item.groups, item.services])
+        }
+        dataTable.fnClearTable()
+        dataTable.fnAddData(tableData)
+        $("#tableContainer").removeClass("hidden")
+      })
+      return false
+    })
+  })
+.row
+  .span16
+    %form{:id => "search-form"}
+      %fieldset
+        %legend Enter hostname or hostname/service.
+        .clearfix
+          %label{:for => "host"} Hostname:
+          .input
+            %input{:class => "xlarge", :type => "text", :id => "host", :name => "host"}
+        .clearfix
+          %label{:for => "service"} Service:
+          .input
+            %input{:class => "xlarge", :type => "text", :id => "service", :name => "service"}
+            %span(class = "help-inline") (optional)
+        .actions
+          %input{:class => "btn primary", :type => "submit", :value => "Show"}
+          %input{:class => "btn", :type => "reset", :value => "Reset"}
+.hidden#tableContainer
+  %table{:id => "hosts", :cellpadding => "0", :cellspacing => "0", :border => "0", :class => "bordered-table zebra-striped"}
+    %thead
+      %tr
+        %th Name
+        %th IP
+        %th Alias
+        %th Groups
+        %th Services
+    %tbody

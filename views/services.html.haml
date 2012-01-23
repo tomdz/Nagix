@@ -1,20 +1,35 @@
-%html
-  %head
-    %title Nagix: Services
-    %link(rel="stylesheet" href="/css/nagix.css")
-
-%body
-  %h1 Services
-
-  %table.table
+- @page = "services"
+:javascript
+  $.extend( $.fn.dataTableExt.oStdClasses, {
+      "sSortAsc": "header headerSortDown",
+      "sSortDesc": "header headerSortUp",
+      "sSortable": "header"
+  }); 
+  $(document).ready(function() {
+    var dataTable = $("#services")
+    dataTable.dataTable({
+      "sDom": "<'row'<'span8'l><'span8'f>r>t<'row'<'span8'i><'span8'p>>",
+      "sPaginationType": "bootstrap",
+      "oLanguage": {
+        "sLengthMenu": "_MENU_ records per page"
+      }
+    })
+    $.getJSON("/1.0/rest/services.json", function(data) {
+      var tableData = []
+      for (var idx in data) {
+        var item = data[idx]
+        tableData.push([item.display_name, item.description, item.groups, item.host_name, item.host_address, item.host_alias])
+      }
+      dataTable.fnAddData(tableData)
+    })
+  })
+%table{:id => "services", :cellpadding => "0", :cellspacing => "0", :border => "0", :class => "bordered-table zebra-striped"}
+  %thead
     %tr
-      %thead
-        %th.th Service
-        %th.th Attributes
-      %tbody
-        -@services.each do |services|
-          %tr
-            %td= services['description']
-
-  #copyright
-    %p Powered by Nagiolista v0.0.3.
+      %th Name
+      %th Description
+      %th Groups
+      %th Host name
+      %th Host IP
+      %th Host alias
+  %tbody
