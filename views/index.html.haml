@@ -24,7 +24,6 @@
           url = url + "/services/" + encodeURIComponent(service)
         }
       }
-      url = url + ".json"
       $.getJSON(url, function(data) {
         var tableData = []
         for (var idx in data) {

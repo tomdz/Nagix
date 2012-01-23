@@ -3,7 +3,7 @@
   $(document).ready(function() {
     var host = getParameterByName("host")
     var service = getParameterByName("service")
-    $.getJSON("/1.0/rest/hosts/" + encodeURIComponent(host) + "/services/" + encodeURIComponent(service) + ".json", function(data) {
+    $.getJSON("/1.0/rest/hosts/" + encodeURIComponent(host) + "/services/" + encodeURIComponent(service), function(data) {
       var str = ''
       var serviceData = data[0]
       var keys = keysOf(serviceData).sort()
@@ -11,7 +11,7 @@
         var key = keys[idx]
         str = str + "<tr><td>" + key + "</td><td>" + serviceData[key] + "</td></tr>"
       }
-      $("#heading").text(serviceData["display_name"] + " on " + serviceData["host_name"] + " (" + serviceData["host_alias"] + ")")
+      $("#heading").text("Service " + serviceData["display_name"] + " on host " + serviceData["host_name"] + " (" + serviceData["host_alias"] + ")")
       $("#host > tbody:last").append(str);
     })
   })

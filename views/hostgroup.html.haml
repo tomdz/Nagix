@@ -1,16 +1,16 @@
-- @page = "hosts"
+- @page = "hostgroups"
 :javascript
   $(document).ready(function() {
-    var host = getParameterByName("host")
-    $.getJSON("/1.0/rest/hosts/" + encodeURIComponent(host), function(data) {
+    var group = getParameterByName("group")
+    $.getJSON("/1.0/rest/hostgroups/" + encodeURIComponent(group), function(data) {
       var str = ''
-      var hostData = data[0]
-      var keys = keysOf(hostData).sort()
+      var groupData = data[0]
+      var keys = keysOf(groupData).sort()
       for (var idx in keys) {
         var key = keys[idx]
-        str = str + "<tr><td>" + key + "</td><td>" + hostData[key] + "</td></tr>"
+        str = str + "<tr><td>" + key + "</td><td>" + groupData[key] + "</td></tr>"
       }
-      $("#heading").text("Host " + hostData["name"] + " (" + hostData["alias"] + ")")
+      $("#heading").text("Host group " + groupData["name"])
       $("#host > tbody:last").append(str);
     })
   })

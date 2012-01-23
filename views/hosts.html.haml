@@ -42,7 +42,7 @@
         "sLengthMenu": "_MENU_ records per page"
       }
     })
-    $.getJSON("/1.0/rest/hosts.json", function(data) {
+    $.getJSON("/1.0/rest/hosts", function(data) {
       var tableData = []
       for (var idx in data) {
         var item = data[idx]

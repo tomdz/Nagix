@@ -7,14 +7,21 @@
   }); 
   $(document).ready(function() {
     var dataTable = $("#hostgroups")
+    var columnDefs = [
+      { "aTargets" : [0], "sType": "html", "fnRender" : function(obj) {
+        var group = obj.aData[obj.iDataColumn]
+        return "<a href='/hostgroup?group=" + encodeURIComponent(group) + "'>" + group + "</a>"
+      } }
+    ]
     dataTable.dataTable({
       "sDom": "<'row'<'span8'l><'span8'f>r>t<'row'<'span8'i><'span8'p>>",
+      "aoColumnDefs" : columnDefs,
       "sPaginationType": "bootstrap",
       "oLanguage": {
         "sLengthMenu": "_MENU_ records per page"
       }
     })
-    $.getJSON("/1.0/rest/hostGroups.json", function(data) {
+    $.getJSON("/1.0/rest/hostgroups", function(data) {
       var tableData = []
       for (var idx in data) {
         var item = data[idx]
